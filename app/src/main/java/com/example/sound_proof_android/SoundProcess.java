@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SoundProcess {
 
@@ -25,6 +26,7 @@ public class SoundProcess {
     AudioSignal mobileAudioObj;
     AudioSignal browserAudioObj;
     int lag;
+    double[] simScores = new double[150];
 
     // order = 0: mobile on first parameter & browser on second parameter
     // order = 1: browser on first parameter & mobile on second parameter
@@ -58,6 +60,12 @@ public class SoundProcess {
     }
 
     public boolean startProcess() {
+        // if the lag time is above our threshold of 150ms to prevent potential malicious login attempts.
+        if (lag > 150) {
+            Toast.makeText(context, "Lag: " + lag + "\nLag is too high to compare", Toast.LENGTH_LONG).show();
+            return false;
+        }
+
         // get both audio signals
         double[] mobileAudioData = mobileAudioObj.getAudioData();
         double[] browserAudioData = browserAudioObj.getAudioData();
@@ -67,27 +75,34 @@ public class SoundProcess {
         double[][] filteredMobileSignal = third.thirdOctaveFiltering(mobileAudioData);
         double[][] filteredBrowserSignal = third.thirdOctaveFiltering(browserAudioData);
 
-        double simScore = -1;
-        if (order == 0) {
-            simScore = similarityScore(filteredMobileSignal, filteredBrowserSignal, lag);
-        } else if (order == 1) {
-            simScore = similarityScore(filteredBrowserSignal, filteredMobileSignal, lag);
+        // begin running the sound comparison with the lag time accounted for by looping through different estimated lag times
+        //from 0ms to 150ms and store the similarity score.
+        for (int newLag = 0; newLag < 150; newLag++) {
+            simScores[newLag] = getSimilarityScore(filteredMobileSignal, filteredBrowserSignal, newLag+1);
+            System.out.println("Similary Score is " + simScores[newLag]);
         }
-        System.out.println("Similary Score is " + simScore);
+
+        // get the highest similarity score.
+        double simScore = Arrays.stream(simScores).max().getAsDouble();
 
         if(simScore > simThreshold){
-            Toast.makeText(context, "Lag: " + lag + "\nSimilarity Score: " + simScore, Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Lag: " + lag + "\nMax Similarity Score: " + simScore, Toast.LENGTH_LONG).show();
             System.out.println("Login Accepted - Similarity score passed.");
             return true;
         } else {
-            if (lag > 1000) {
-                Toast.makeText(context, "Lag: " + lag + "\nLag is too high to compare", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(context, "Lag: " + lag + "\nSimilarity Score: " + simScore, Toast.LENGTH_LONG).show();
-            }
+            Toast.makeText(context, "Lag: " + lag + "\nMax Similarity Score: " + simScore, Toast.LENGTH_LONG).show();
             System.out.println("Login Rejected - Similarity score failed.");
             return false;
         }
+    }
+
+    private double getSimilarityScore(double[][] filteredMobileSignal, double[][] filteredBrowserSignal, int lag) {
+        if (order == 0) {
+            return similarityScore(filteredMobileSignal, filteredBrowserSignal, lag);
+        } else if (order == 1) {
+            return similarityScore(filteredBrowserSignal, filteredMobileSignal, lag);
+        }
+        return -1;
     }
 
     // Used to compute the similarity score by determining the average
