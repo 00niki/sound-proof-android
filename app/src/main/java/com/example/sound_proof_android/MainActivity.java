@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
         // GET REQUEST TO RECEIVE SIGNAL TO RECORD (make this a function later)
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "https://soundproof.azurewebsites.net/login/2farecordpolling";
+        String url = "https://sound-proof-web.herokuapp.com/login/2farecordpolling";
 
         // get public key
         KeyStore keyStore = null;
@@ -242,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
         // GET REQUEST TO RECEIVE SIGNAL TO RECORD (make this a function later)
         RequestQueue queue = Volley.newRequestQueue(this);
-        String url = "https://soundproof.azurewebsites.net/login/2farecordingdata";
+        String url = "https://sound-proof-web.herokuapp.com/login/2farecordingdata";
 
         // get public key
         KeyStore keyStore = null;
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
     // immediately after the sound processing is done
     public void postResultResponse(boolean loginStatus) {
         RequestQueue requestQueue = Volley.newRequestQueue(this);
-        String url = "https://soundproof.azurewebsites.net/login/2faresponse";
+        String url = "https://sound-proof-web.herokuapp.com/login/2faresponse";
 
         String resultMessage = "";
         if(loginStatus){

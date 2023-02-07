@@ -89,7 +89,7 @@ public class Record {
             public void run() {
                 try  {
                     try {
-                        URL url = new URL("https://soundproof.azurewebsites.net/servertime");
+                        URL url = new URL("https://sound-proof-web.herokuapp.com/servertime");
                         long requestTime = System.currentTimeMillis();
                         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                         InputStream in = new BufferedInputStream(urlConnection.getInputStream());

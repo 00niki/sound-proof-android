@@ -22,7 +22,7 @@ Current prototype requires for the mobile application to be opened while authent
 
 ## One Time Connection
 Before the Sound Proof 2FA process, you will need to make a web account and connect (one time) your mobile application to that account.
-1. Register an account [here](https://soundproof.azurewebsites.net/login) and log in.
+1. Register an account [here](https://sound-proof-web.herokuapp.com/login) and log in.
 2. After logging in, click on the "2FA Setup" hyperlink on the website and it should direct you to the QR code page.
 3. While you are on the QR code page on the website, open your Sound Proof mobile application and go to the Connect page through the hamburger menu.
 4. As shown below, click on the QR CODE button and face your camera to the QR code on the website. It will automatically connect your web account with your mobile application.

@@ -138,7 +138,7 @@ public class ConnectFragment extends Fragment {
 
     public void connect(String code) {
         RequestQueue requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://soundproof.azurewebsites.net/tokenenrollment";
+        String url = "https://sound-proof-web.herokuapp.com/tokenenrollment";
 
         SharedPreferences.Editor editor = sharedPref.edit();
 
@@ -152,27 +152,21 @@ public class ConnectFragment extends Fragment {
         System.out.println(pubKey.replaceAll("\n", ""));
         String mRequestBody = postData.toString();
 
-        StringRequest stringRequest = new StringRequest (Request.Method.POST, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                if (response.equals("200")) {
-                    statusText.setText("ENROLLED");
-                    statusText.setTextColor(Color.GREEN);
-                    editor.putString("enrollmentCode", code);
-                    editor.apply();
-                    Toast.makeText(getActivity(), "Enrollment Success", Toast.LENGTH_LONG).show();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.e("LOG_RESPONSE", error.toString());
-                statusText.setText("NOT ENROLLED");
-                statusText.setTextColor(Color.RED);
-                editor.putString("enrollmentCode", "");
+        StringRequest stringRequest = new StringRequest (Request.Method.POST, url, response -> {
+            if (response.equals("200")) {
+                statusText.setText("ENROLLED");
+                statusText.setTextColor(Color.GREEN);
+                editor.putString("enrollmentCode", code);
                 editor.apply();
-                Toast.makeText(getActivity(), "Enrollment Failed", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), "Enrollment Success", Toast.LENGTH_LONG).show();
             }
+        }, error -> {
+            Log.e("LOG_RESPONSE", error.toString());
+            statusText.setText("NOT ENROLLED");
+            statusText.setTextColor(Color.RED);
+            editor.putString("enrollmentCode", "");
+            editor.apply();
+            Toast.makeText(getActivity(), "Enrollment Failed", Toast.LENGTH_LONG).show();
         }) {
             @Override
             public String getBodyContentType() {
