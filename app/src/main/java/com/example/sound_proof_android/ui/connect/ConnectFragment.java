@@ -13,6 +13,7 @@ import androidx.navigation.NavController;
 import android.preference.PreferenceManager;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.text.Editable;
 import android.util.Base64;
 import android.util.Log;
 
@@ -20,6 +21,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,6 +65,8 @@ public class ConnectFragment extends Fragment {
 
     private ConnectViewModel connectViewModel;
     private Button qrButton;
+    private Button loginButton;
+    private EditText secretInput;
     private TextView statusText;
 
     SharedPreferences sharedPref;
@@ -89,7 +93,9 @@ public class ConnectFragment extends Fragment {
 
         qrButton = v.findViewById(R.id.qrButton);
         statusText = v.findViewById(R.id.statusText);
-
+        loginButton = v.findViewById(R.id.loginButton);
+        secretInput = v.findViewById(R.id.secretCodeInput);
+        
         sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String code = sharedPref.getString("enrollmentCode", "");
         if (code.equals("")) {
@@ -112,6 +118,19 @@ public class ConnectFragment extends Fragment {
             public void onClick(View view) {
                 NavController navController = findNavController(ConnectFragment.this);
                 navController.navigate(R.id.action_nav_connect_to_nav_qrcode);
+            }
+        });
+        
+        loginButton.setOnClickListener(v1 -> {
+            Editable secretCode = secretInput.getText();
+            if (secretCode == null || secretCode.toString().equals("")) {
+                Toast.makeText(requireContext(), "Secret code is empty!", Toast.LENGTH_SHORT).show();
+            } else {
+                if (secretCode.toString().length() == 64) {
+                    connect(secretCode.toString());
+                } else {
+                    Toast.makeText(requireContext(), "Secret code is error!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -152,7 +171,9 @@ public class ConnectFragment extends Fragment {
         System.out.println(pubKey.replaceAll("\n", ""));
         String mRequestBody = postData.toString();
 
-        StringRequest stringRequest = new StringRequest (Request.Method.POST, url, response -> {
+        StringRequest stringRequest = new StringRequest (Request.Method.POST, url, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
             if (response.equals("200")) {
                 statusText.setText("ENROLLED");
                 statusText.setTextColor(Color.GREEN);
@@ -160,14 +181,18 @@ public class ConnectFragment extends Fragment {
                 editor.apply();
                 Toast.makeText(getActivity(), "Enrollment Success", Toast.LENGTH_LONG).show();
             }
-        }, error -> {
+        }
+    }, new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError error) {
             Log.e("LOG_RESPONSE", error.toString());
             statusText.setText("NOT ENROLLED");
             statusText.setTextColor(Color.RED);
             editor.putString("enrollmentCode", "");
             editor.apply();
             Toast.makeText(getActivity(), "Enrollment Failed", Toast.LENGTH_LONG).show();
-        }) {
+        }
+     }) {
             @Override
             public String getBodyContentType() {
                 return "application/json; charset=utf-8";
