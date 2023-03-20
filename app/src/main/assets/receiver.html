@@ -1,0 +1,71 @@
+<!-- Receiver HTML file -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Receiver</title>
+  <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+</head>
+<body>
+  <h1>Receiver</h1>
+  <script>
+    // Connect to the PeerJS server with a custom ID for the receiver
+    const email = "test@gmail.com";
+    const peerid_intermediate = email + "mobile";
+    const peerid = convertSpecialCharacters(peerid_intermediate)
+    console.log(peerid)
+    const myPeer = new Peer(peerid.toString(), {
+      secure: true,
+      host: 'peer-server-rtc.herokuapp.com',
+      port: 443
+    });
+
+    // When the PeerJS connection is open, listen for incoming connections
+    myPeer.on('open', (id) => {
+      console.log('Connected to PeerJS server with ID:', id);
+
+      // When an incoming data connection is established, handle the JSON data
+      myPeer.on('connection', (conn) => {
+        console.log('Incoming data connection with sender opened.');
+
+        // When the data connection receives the JSON data, parse it and save to a file
+        conn.on('data', (data) => {
+          console.log('Received data:', data);
+          const jsonData = JSON.parse(data);
+          console.log('JSON data:', jsonData);
+          const filename = 'data.json';
+          const blob = new Blob([JSON.stringify(jsonData, null, 2)], {type: 'application/json'});
+          const url = URL.createObjectURL(blob);
+
+          // Automatically download the JSON file
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.click();
+        });
+      });
+    });
+
+    function convertSpecialCharacters(str) {
+      const specialChars = {
+        '@': 'at',
+        '#': 'hash',
+        '$': 'dollar',
+        '%': 'percent',
+        '&': 'and',
+        '*': 'star',
+        '+': 'plus',
+        '-': 'dash',
+        '/': 'slash',
+        '=': 'equal',
+        '?': 'question',
+        '^': 'caret',
+        '_': 'underscore',
+        '|': 'pipe',
+        '~': 'tilde'
+      };
+    
+      return str.replace(/[^\w\s]/g, match => specialChars[match] || '');
+    }
+  </script>
+</body>
+</html>
