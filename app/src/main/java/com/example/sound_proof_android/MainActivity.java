@@ -68,6 +68,16 @@ import 	java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
+import android.webkit.WebView;
+
+// Imports for reading the JSON file from Downloads folder
+import android.os.Environment;
+import java.io.File;
+import java.io.FileInputStream;
+
+import android.view.ViewGroup;
+import java.io.FileWriter;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -247,73 +257,118 @@ public class MainActivity extends AppCompatActivity {
         // get public key
         KeyStore keyStore = null;
         try {
-            keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null);
-            PublicKey publicKey = keyStore.getCertificate("spKey").getPublicKey();
-            JSONObject postData = new JSONObject();
-            postData.put("key", "-----BEGIN PUBLIC KEY-----" + android.util.Base64.encodeToString(publicKey.getEncoded(), android.util.Base64.DEFAULT).replaceAll("\n", "") + "-----END PUBLIC KEY-----");
+        keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null);
+        PublicKey publicKey = keyStore.getCertificate("spKey").getPublicKey();
+        JSONObject postData = new JSONObject();
+        postData.put("key", "-----BEGIN PUBLIC KEY-----" + android.util.Base64.encodeToString(publicKey.getEncoded(), android.util.Base64.DEFAULT).replaceAll("\n", "") + "-----END PUBLIC KEY-----");
 
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                    (Request.Method.POST, url, postData, new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            // response returns a JSON file that includes time, key, iv, b64audio
-                            Log.i("LOG_RESPONSE", "Browser Audio Received");
-                            try {
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
+        (Request.Method.POST, url, postData, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        // response returns a JSON file that includes time, key, iv, b64audio
+                        Log.i("LOG_RESPONSE", "Browser Audio Received");
+                        // Create a WebView object
+                        WebView webView = new WebView(MainActivity.this);
 
-                                // Parse JSON file
-                                long browserStopTime = response.getLong("time");
-                                String key = response.getString("key");
-                                String iv = response.getString("iv");
-                                String b64audio = response.getString("b64audio");
+                        // Add the WebView to the layout
+                        ViewGroup rootView = findViewById(android.R.id.content);
+                        rootView.addView(webView);
 
-                                // Decrypt and save Browser wav file
-                                Cryptography crypt = new Cryptography(MainActivity.this);
-                                String decryptedAESkey = crypt.rsaDecrypt(Base64.decode(key, Base64.DEFAULT));
-                                crypt.saveWav(crypt.aesDecrypt(b64audio, decryptedAESkey, iv));
+                        // Load an HTML file from the assets folder
+                        webView.loadUrl("file:///android_asset/receiver.html");
 
-                                // Sound Process then send post request of the result
-                                SoundProcess sp = new SoundProcess(MainActivity.this, record.getRecordStopTime(), browserStopTime);
-                                postResultResponse(sp.startProcess());
-                            } catch (JSONException | IOException e) {
-                                e.printStackTrace();
+                        
+
+                        // Show the WebView for 10 seconds
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Close the WebView after 10 seconds
+                                rootView.removeView(webView);
+                                webView.destroy();
                             }
+                        }, 10000); // 10 seconds delay
+
+                        
+                        // Save JSON file to Downloads folder
+                        File downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                        File jsonFile = new File(downloadsFolder, "data.json");
+
+                        try {
+
+                            FileWriter file = new FileWriter(jsonFile);
+                            file.write(response.toString());
+                            file.flush();
+                            file.close();
+
+                            // Parse JSON file
+                            FileInputStream fis = new FileInputStream(jsonFile);
+                            byte[] data = new byte[(int) jsonFile.length()];
+                            fis.read(data);
+                            fis.close();
+                            String jsonStr = new String(data, "UTF-8");
+
+                            JSONObject json = new JSONObject(jsonStr);
+                            long browserStopTime = json.getLong("time");
+                            String key = json.getString("key");
+                            String iv = json.getString("iv");
+                            String b64audio = json.getString("b64audio");
+
+                            // Decrypt and save Browser wav file
+                            Cryptography crypt = new Cryptography(MainActivity.this);
+                            String decryptedAESkey = crypt.rsaDecrypt(Base64.decode(key, Base64.DEFAULT));
+                            crypt.saveWav(crypt.aesDecrypt(b64audio, decryptedAESkey, iv));
+
+                            // Sound Process then send post request of the result
+                            SoundProcess sp = new SoundProcess(MainActivity.this, record.getRecordStopTime(), browserStopTime);
+                            postResultResponse(sp.startProcess());
+                        } catch (JSONException | IOException e) {
+                            e.printStackTrace();
                         }
-                    }, new Response.ErrorListener() {
+
+                        // Download completed, delete the file
+                        //jsonFile.delete();
+                    }
+                }, new Response.ErrorListener() {
                         @Override
                         public void onErrorResponse(VolleyError error) {
                             Log.e("LOG_RESPONSE", error.toString());
                         }
-                    }) {
-                @Override
-                protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
+                }) {
+            @Override
+           protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
                     if (response != null) {
                         System.out.println(response.statusCode);
                     }
                     return super.parseNetworkResponse(response);
                 }
-            };
 
-            // setting timeout
-            jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(25000,
-                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        };
 
-            // Access the RequestQueue through your singleton class.
-            queue.add(jsonObjectRequest);
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        // GET REQUEST DONE
+        // setting timeout
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(25000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+
+        // Access the RequestQueue through your singleton class.
+        queue.add(jsonObjectRequest);
     }
+        catch (KeyStoreException e) {
+        e.printStackTrace();
+    } catch (CertificateException e) {
+        e.printStackTrace();
+    } catch (IOException e) {
+        e.printStackTrace();
+    } catch (NoSuchAlgorithmException e) {
+        e.printStackTrace();
+    } catch (JSONException e) {
+        e.printStackTrace();
+    }
+
+    // GET REQUEST DONE
+}
 
     // HTTP REQUEST
     // Used to send the post result response back to the server
