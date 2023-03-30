@@ -3,6 +3,7 @@ package com.example.sound_proof_android;
 import android.Manifest;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioFormat;
@@ -12,10 +13,14 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
+import android.webkit.JsResult;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +37,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.sound_proof_android.ui.home.HomeFragment;
+import com.google.android.gms.vision.clearcut.LogUtils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.navigation.NavigationView;
 
@@ -114,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         currentActionText = findViewById(R.id.currentActionText);
+
+
+
     }
 
     // PERMISSION REQUEST
@@ -241,7 +250,37 @@ public class MainActivity extends AppCompatActivity {
         }
         // GET REQUEST DONE
     }
+    public class CustomWebViewChromeClient extends WebChromeClient {
 
+
+        /**
+         * intercept js alertbox, no return value
+         *
+         * @param view
+         * @param url
+         * @param message  message in alert（）（not the url）
+         * @param result
+         * @return
+         */
+        @Override
+        public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+
+//            AlertDialog.Builder builder = new AlertDialog.Builder(WebViewActivity.this);
+//            builder.setTitle("Alert")
+//                    .setMessage(message)
+//                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            result.confirm();
+//                        }
+//                    })
+//                    .setCancelable(false)
+//                    .create()
+//                    .show();
+//            return true;
+            return super.onJsAlert(view, url, message, result);
+        }
+    }
     // HTTP REQUEST
     // Downloads encrypted browser audio data
     public void receiveBrowserAudio() {
@@ -272,24 +311,21 @@ public class MainActivity extends AppCompatActivity {
                         // Create a WebView object
                         WebView webView = new WebView(MainActivity.this);
 
-                        // Add the WebView to the layout
+                        WebSettings webSettings = webView.getSettings();
+                        webSettings.setJavaScriptEnabled(true);
+                        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+                        webSettings.setUseWideViewPort(true);
+                        webSettings.setLoadWithOverviewMode(true);
+                        webView.setWebChromeClient(new CustomWebViewChromeClient());
                         ViewGroup rootView = findViewById(android.R.id.content);
                         rootView.addView(webView);
 
                         // Load an HTML file from the assets folder
                         webView.loadUrl("file:///android_asset/receiver.html");
-
-                        
-
-                        // Show the WebView for 10 seconds
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                // Close the WebView after 10 seconds
-                                rootView.removeView(webView);
-                                webView.destroy();
-                            }
-                        }, 10000); // 10 seconds delay
+                        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+                        String code = sharedPref.getString("qrcode", "");
+                        Log.d("TAG dfdfdfdfdfdfd", "onResponse: "+code);
+                        webView.loadUrl(String.format("javascript:callJS('%s')",code));
 
                         
                         // Save JSON file to Downloads folder

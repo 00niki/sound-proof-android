@@ -25,6 +25,7 @@
         android:layout_width="280dp"
         android:layout_height="50dp"
         android:layout_marginTop="20dp"
+        android:text="c4d0b6aaa43baf536acd874d43ee92a8aa18dceddcd557f931d1a1f15835ecc3"
         android:hint="Or enter your secret code here"
         android:textColorHint="@android:color/white"
         android:textColor="@android:color/white"/>

@@ -1,6 +1,7 @@
 package com.example.sound_proof_android.ui.qrcode;
 
 import android.Manifest;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -8,6 +9,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.preference.PreferenceManager;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.SurfaceHolder;
@@ -17,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.example.sound_proof_android.MainActivity;
 import com.example.sound_proof_android.R;
 import com.example.sound_proof_android.ui.connect.ConnectViewModel;
 import com.google.android.gms.vision.CameraSource;
@@ -110,10 +113,14 @@ public class QrCodeFragment extends Fragment {
 
                         @Override
                         public void run() {
-                            if (barcodes.valueAt(0).displayValue.length() == 64 && counter == 0) {
+                            if (counter == 0) {
                                 intentData = barcodes.valueAt(0).displayValue;
-                                txtBarcodeValue.setText(intentData);
-                                connectViewModel.selectCode(intentData);
+
+                               String[] splitResult= intentData.split(":");
+                                txtBarcodeValue.setText(splitResult[0]);
+                                connectViewModel.selectCode(splitResult[0]);
+                                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(requireActivity());
+                                sharedPref.edit().putString("qrcode", splitResult[1]).commit();
                                 counter++;
                                 getActivity().onBackPressed();
                             }

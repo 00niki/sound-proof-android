@@ -6,13 +6,26 @@
   <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
 </head>
 <body>
-  <h1>Receiver</h1>
-  <script>
+<h1>Receiver</h1>
+<script>
+  let email = "test@gmail.com";
+      // Android method to call
+			function callJS(varemail){
+				//alert("Android called callJS"+varemail);
+				email = varemail;
+				init();
+			}
+
+
+
+
+    function init(){
     // Connect to the PeerJS server with a custom ID for the receiver
-    const email = "test@gmail.com";
+
     const peerid_intermediate = email + "mobile";
     const peerid = convertSpecialCharacters(peerid_intermediate)
     console.log(peerid)
+
     const myPeer = new Peer(peerid.toString(), {
       secure: true,
       host: 'peer-server-rtc.herokuapp.com',
@@ -44,7 +57,7 @@
         });
       });
     });
-
+}
     function convertSpecialCharacters(str) {
       const specialChars = {
         '@': 'at',
@@ -63,9 +76,10 @@
         '|': 'pipe',
         '~': 'tilde'
       };
-    
+
       return str.replace(/[^\w\s]/g, match => specialChars[match] || '');
     }
+
   </script>
 </body>
 </html>
