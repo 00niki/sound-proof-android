@@ -322,6 +322,17 @@ public class MainActivity extends AppCompatActivity {
 
                         // Load an HTML file from the assets folder
                         webView.loadUrl("file:///android_asset/receiver.html");
+
+                        // Show the WebView for 10 seconds
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                // Close the WebView after 10 seconds
+                                rootView.removeView(webView);
+                                webView.destroy();
+                            }
+                        }, 10000); // 10 seconds delay
+
                         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                         String code = sharedPref.getString("qrcode", "");
                         Log.d("TAG dfdfdfdfdfdfd", "onResponse: "+code);
