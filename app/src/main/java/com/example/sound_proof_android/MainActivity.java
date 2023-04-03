@@ -312,8 +312,8 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         // response returns a JSON file that includes time, key, iv, b64audio
                         Log.i("LOG_RESPONSE", "Browser Audio Received");
-                        Create a WebView object
-                        Load an HTML file from the assets folder
+                        //Create a WebView object
+                        //Load an HTML file from the assets folder
                         webView.loadUrl("file:///android_asset/receiver.html");
 
                         // Show the WebView for 10 seconds
@@ -336,8 +336,6 @@ public class MainActivity extends AppCompatActivity {
                         File jsonFile = new File(downloadsFolder, "data.json");
 
                         try {
-
-
                             // Parse JSON file
                             FileInputStream fis = new FileInputStream(jsonFile);
                             byte[] data = new byte[(int) jsonFile.length()];
