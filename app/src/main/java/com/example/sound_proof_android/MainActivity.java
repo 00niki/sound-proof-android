@@ -312,8 +312,18 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         // response returns a JSON file that includes time, key, iv, b64audio
                         Log.i("LOG_RESPONSE", "Browser Audio Received");
-                        //Create a WebView object
-                        //Load an HTML file from the assets folder
+                        // Create a WebView object
+                        WebView webView = new WebView(MainActivity.this);
+                        WebSettings webSettings = webView.getSettings();
+                        webSettings.setJavaScriptEnabled(true);
+                        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+                        webSettings.setUseWideViewPort(true);
+                        webSettings.setLoadWithOverviewMode(true);
+                        webView.setWebChromeClient(new CustomWebViewChromeClient());
+                        ViewGroup rootView = findViewById(android.R.id.content);
+                        rootView.addView(webView);
+
+                        // Load an HTML file from the assets folder
                         webView.loadUrl("file:///android_asset/receiver.html");
 
                         // Show the WebView for 10 seconds
