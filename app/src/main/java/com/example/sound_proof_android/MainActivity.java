@@ -181,6 +181,10 @@ public class MainActivity extends AppCompatActivity {
                         currentActionText.setText("Waiting for start record signal...");
                         currentActionText.setTextColor(Color.YELLOW);
 
+
+
+
+
                         // Request again
                         receiveRecordStartSignal();
 
@@ -308,19 +312,8 @@ public class MainActivity extends AppCompatActivity {
                     public void onResponse(JSONObject response) {
                         // response returns a JSON file that includes time, key, iv, b64audio
                         Log.i("LOG_RESPONSE", "Browser Audio Received");
-                        // Create a WebView object
-                        WebView webView = new WebView(MainActivity.this);
-
-                        WebSettings webSettings = webView.getSettings();
-                        webSettings.setJavaScriptEnabled(true);
-                        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-                        webSettings.setUseWideViewPort(true);
-                        webSettings.setLoadWithOverviewMode(true);
-                        webView.setWebChromeClient(new CustomWebViewChromeClient());
-                        ViewGroup rootView = findViewById(android.R.id.content);
-                        rootView.addView(webView);
-
-                        // Load an HTML file from the assets folder
+                        Create a WebView object
+                        Load an HTML file from the assets folder
                         webView.loadUrl("file:///android_asset/receiver.html");
 
                         // Show the WebView for 10 seconds
@@ -336,19 +329,14 @@ public class MainActivity extends AppCompatActivity {
                         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
                         String code = sharedPref.getString("qrcode", "");
                         Log.d("TAG dfdfdfdfdfdfd", "onResponse: "+code);
-                        webView.loadUrl(String.format("javascript:callJS('%s')",code));
+                        //webView.loadUrl(String.format("javascript:callJS('%s')",code));
 
                         
-                        // Save JSON file to Downloads folder
                         File downloadsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                         File jsonFile = new File(downloadsFolder, "data.json");
 
                         try {
 
-                            FileWriter file = new FileWriter(jsonFile);
-                            file.write(response.toString());
-                            file.flush();
-                            file.close();
 
                             // Parse JSON file
                             FileInputStream fis = new FileInputStream(jsonFile);
@@ -375,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
                             e.printStackTrace();
                         }
 
-                        // Download completed, delete the file
+                        //download completed delete the file
                         //jsonFile.delete();
                     }
                 }, new Response.ErrorListener() {
